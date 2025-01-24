@@ -9,5 +9,6 @@ namespace Inventory.Data
         public string ItemId;
         public int Amount;
         public int MaxAmount;
+        public float Weight;
     } 
 }

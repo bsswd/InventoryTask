@@ -35,6 +35,8 @@ namespace Inventory
             }
         }
 
+        public int MaxAmount {get => _data.MaxAmount;}
+        public float Weight {get => _data.Weight;}
         public bool IsEmpty => Amount == 0 && string.IsNullOrEmpty(ItemId);
 
         private readonly InventorySlotData _data;

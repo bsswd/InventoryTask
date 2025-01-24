@@ -48,6 +48,70 @@ namespace Inventory
                 }
             }
         }
+
+        public AddItemsToInventoryGridResult AddItems(string itemId, int amount = 1)
+        {
+           
+            
+        }
+
+        public AddItemsToInventoryGridResult AddItems(Vector2Int slotCoords, string itemId, int amount = 1)
+        {
+            var slot = _slotsMap[slotCoords];
+            var newValue = slot.Amount + amount;
+            var itemsAddedAmount = 0;
+
+            if (slot.IsEmpty && amount > 0)
+            {
+                slot.ItemId = itemId;
+            }
+
+            var itemSlotCapacity = GetItemSlotCapacity(itemId);
+
+            if (newValue > itemSlotCapacity)
+            {
+                var remainingItems = newValue - itemSlotCapacity;
+                var itemsToAddAmount = itemSlotCapacity - slot.Amount;
+                itemsAddedAmount += itemsToAddAmount;
+                slot.Amount = itemSlotCapacity;
+
+                var result = AddItems(itemId, remainingItems);
+                itemsAddedAmount += result.ItemsAddedAmount;
+            }
+            
+            else
+            {
+                itemsAddedAmount = amount;
+                slot.Amount = newValue;
+            }
+
+            return new AddItemsToInventoryGridResult(OwnerId, amount, itemsAddedAmount);
+        }
+        
+        public RemoveItemsFromInventoryGridResult RemoveItems(string itemId, int amount = 1)
+        {
+           
+
+        }
+        
+        public RemoveItemsFromInventoryGridResult RemoveItems(Vector2Int slotCoords, string itemId, int amount = 1)
+        {
+            var slot = _slotsMap[slotCoords];
+
+            if (slot.IsEmpty || slot.ItemId != itemId || slot.Amount < amount)
+            {
+                return new RemoveItemsFromInventoryGridResult(OwnerId, amount, false);
+            }
+
+            slot.Amount -= amount;
+            
+            if(slot.Amount == 0)
+            {
+                slot.ItemId = null;
+            }
+
+            return new RemoveItemsFromInventoryGridResult(OwnerId, amount, true);
+        }
         
         public int GetAmount(string itemId)
         {
@@ -75,9 +139,9 @@ namespace Inventory
             return array;
         }
 
-        public bool AddItems(string itemId, int amount)
+        private int GetItemSlotCapacity(string itemId)
         {
-            throw new NotImplementedException();
+            return 100;
         }
     }
 }

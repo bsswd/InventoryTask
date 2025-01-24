@@ -9,6 +9,9 @@ namespace Inventory.ReadOnly
         
         string ItemId { get; }
         int Amount { get; }
+
+        int MaxAmount { get; }
+        float Weight { get; }
         bool IsEmpty { get; }
     }
 }
