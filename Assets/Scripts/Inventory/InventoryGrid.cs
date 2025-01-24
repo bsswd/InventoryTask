@@ -61,9 +61,14 @@ namespace Inventory
                 return new AddItemsToInventoryGridResult(OwnerId, amount, itemsAddedToSlotsWithSameItemsAmount);
             }
 
-        }
+            var itemsAddedToAvailableSlotsAmount =
+                AddToFirstAvailableSlots(itemId, remainingAmount, out remainingAmount);
 
-   
+            var totalAddedItemsAmount = itemsAddedToSlotsWithSameItemsAmount + itemsAddedToAvailableSlotsAmount;
+
+            return new AddItemsToInventoryGridResult(OwnerId, amount, totalAddedItemsAmount);
+
+        }
 
         public AddItemsToInventoryGridResult AddItems(Vector2Int slotCoords, string itemId, int amount = 1)
         {
@@ -100,8 +105,9 @@ namespace Inventory
         
         public RemoveItemsFromInventoryGridResult RemoveItems(string itemId, int amount = 1)
         {
+           // continue from here
            
-
+           return new RemoveItemsFromInventoryGridResult(OwnerId, amount, true); //zaglushka
         }
         
         public RemoveItemsFromInventoryGridResult RemoveItems(Vector2Int slotCoords, string itemId, int amount = 1)
@@ -191,6 +197,48 @@ namespace Inventory
                         {
                             return itemsAddedAmount;
                         }
+                    }
+
+                    else
+                    {
+                        itemsAddedAmount += remainingAmount;
+                        slot.Amount = newValue;
+                        remainingAmount = 0;
+
+                        return itemsAddedAmount;
+                    }
+                }
+            }
+            return itemsAddedAmount;
+        }
+        
+        private int AddToFirstAvailableSlots(string itemId, int amount, out int remainingAmount)
+        {
+            var itemsAddedAmount = 0;
+            remainingAmount = amount;
+
+            for (var i = 0; i < Size.x; i++)
+            {
+                for (var j = 0; j < Size.y; j++)
+                {
+                    var coords = new Vector2Int(i, j);
+                    var slot = _slotsMap[coords];
+
+                    if (!slot.IsEmpty)
+                    {
+                        continue;
+                    }
+
+                    slot.ItemId = itemId;
+                    var newValue = remainingAmount;
+                    var slotItemCapacity = GetItemSlotCapacity(slot.ItemId);
+
+                    if (newValue > slotItemCapacity)
+                    {
+                        remainingAmount = newValue - slotItemCapacity;
+                        var itemsToAddAmount = slotItemCapacity;
+                        itemsAddedAmount += itemsToAddAmount;
+                        slot.Amount = slotItemCapacity;
                     }
 
                     else
