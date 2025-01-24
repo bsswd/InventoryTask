@@ -6,8 +6,8 @@ namespace Inventory.Data
     [Serializable]
     public class InventorySlotData
     {
-        public string itemId;
-        public int amount;
-        public int maxAmount;
+        public string ItemId;
+        public int Amount;
+        public int MaxAmount;
     } 
 }

@@ -5,7 +5,7 @@ namespace Inventory.ReadOnly
     public interface IReadOnlyInventorySlot
     {
         event Action<string> ItemIdChanged;
-        event Action<string> ItemAmountChanged;
+        event Action<int> ItemAmountChanged;
         
         string ItemId { get; }
         int Amount { get; }
