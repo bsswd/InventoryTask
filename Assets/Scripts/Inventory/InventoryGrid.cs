@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Inventory.Data;
 using Inventory.ReadOnly;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace Inventory
@@ -51,9 +52,18 @@ namespace Inventory
 
         public AddItemsToInventoryGridResult AddItems(string itemId, int amount = 1)
         {
-           
-            
+            var remainingAmount = amount;
+            var itemsAddedToSlotsWithSameItemsAmount =
+                AddToSlotWithSameItems(itemId, remainingAmount, out remainingAmount);
+
+            if (remainingAmount <= 0)
+            {
+                return new AddItemsToInventoryGridResult(OwnerId, amount, itemsAddedToSlotsWithSameItemsAmount);
+            }
+
         }
+
+   
 
         public AddItemsToInventoryGridResult AddItems(Vector2Int slotCoords, string itemId, int amount = 1)
         {
@@ -137,6 +147,63 @@ namespace Inventory
             }
 
             return array;
+        }
+        
+        private int AddToSlotWithSameItems(string itemId, int amount, out int remainingAmount)
+        {
+            var itemsAddedAmount = 0;
+            remainingAmount = amount;
+
+            for (var i = 0; i < Size.x; i++)
+            {
+                for (var j = 0; j < Size.y; j++)
+                {
+                    var coords = new Vector2Int(i, j);
+                    var slot = _slotsMap[coords];
+
+                    if (slot.IsEmpty)
+                    {
+                        continue;
+                    }
+
+                    var slotItemCapacity = GetItemSlotCapacity(slot.ItemId);
+
+                    if (slot.Amount >= slotItemCapacity)
+                    {
+                        continue;
+                    }
+
+                    if (slot.ItemId != itemId)
+                    {
+                        continue;
+                    }
+
+                    var newValue = slot.Amount + remainingAmount;
+
+                    if (newValue > slotItemCapacity)
+                    {
+                        remainingAmount = newValue - slotItemCapacity;
+                        var itemsToAddAmount = slotItemCapacity - slot.Amount;
+                        itemsAddedAmount += itemsToAddAmount;
+                        slot.Amount = slotItemCapacity;
+                        
+                        if (remainingAmount == 0)
+                        {
+                            return itemsAddedAmount;
+                        }
+                    }
+
+                    else
+                    {
+                        itemsAddedAmount += remainingAmount;
+                        slot.Amount = newValue;
+                        remainingAmount = 0;
+
+                        return itemsAddedAmount;
+                    }
+                }
+            }
+            return itemsAddedAmount;
         }
 
         private int GetItemSlotCapacity(string itemId)
