@@ -50,6 +50,7 @@ namespace Inventory
             }
         }
 
+        // Add items to inventory
         public AddItemsToInventoryGridResult AddItems(string itemId, int amount = 1)
         {
             var remainingAmount = amount;
@@ -69,7 +70,8 @@ namespace Inventory
             return new AddItemsToInventoryGridResult(OwnerId, amount, totalAddedItemsAmount);
 
         }
-
+        
+        // Add items to slot
         public AddItemsToInventoryGridResult AddItems(Vector2Int slotCoords, string itemId, int amount = 1)
         {
             var slot = _slotsMap[slotCoords];
@@ -103,13 +105,47 @@ namespace Inventory
             return new AddItemsToInventoryGridResult(OwnerId, amount, itemsAddedAmount);
         }
         
+        // Remove items from inventory
         public RemoveItemsFromInventoryGridResult RemoveItems(string itemId, int amount = 1)
         {
-           // continue from here
-           
-           return new RemoveItemsFromInventoryGridResult(OwnerId, amount, true); //zaglushka
+            if (!Has(itemId, amount))
+            {
+                return new RemoveItemsFromInventoryGridResult(OwnerId, amount, false);
+            }
+            
+            var amountToRemove = amount;
+
+            for (var i = 0; i < Size.x; i++)
+            {
+                for (var j = 0; j < Size.y; j++)
+                {
+                    var slotCoords = new Vector2Int(i, j);
+                    var slot = _slotsMap[slotCoords];
+
+                    if (slot.ItemId != itemId)
+                    {
+                        continue;
+                    }
+
+                    if (amountToRemove > slot.Amount)
+                    {
+                        amountToRemove -= slot.Amount;
+                        
+                        RemoveItems(slotCoords, itemId, slot.Amount);
+                    }
+
+                    else
+                    {
+                        RemoveItems(slotCoords, itemId, slot.Amount);
+                        
+                        return new RemoveItemsFromInventoryGridResult(OwnerId, amount, true);
+                    }
+                }
+            }
+            throw new Exception("Something went wrong, could not remove items from inventory.");
         }
-        
+
+        // Remove items from slot
         public RemoveItemsFromInventoryGridResult RemoveItems(Vector2Int slotCoords, string itemId, int amount = 1)
         {
             var slot = _slotsMap[slotCoords];
@@ -131,10 +167,39 @@ namespace Inventory
         
         public int GetAmount(string itemId)
         {
-            throw new NotImplementedException();
+            var amount = 0;
+            var slots = _data.Slots;
+
+            foreach (var slot in slots)
+            {
+                if (slot.ItemId == itemId)
+                {
+                    amount += slot.Amount;
+                }
+            }
+            
+            return amount;
         }
 
         public bool Has(string itemId, int amount)
+        {
+            var amountExist = GetAmount(itemId);
+            return amountExist >= amount;
+        }
+
+        public void SwitchSlots(Vector2Int slotCoordsA, Vector2Int slotCoordsB)
+        {
+            var slotA = _slotsMap[slotCoordsA];
+            var slotB = _slotsMap[slotCoordsB];
+            var tempSlotAItemId = slotA.ItemId;
+            var tempSlotAItemAmount = slotA.Amount;
+            slotA.ItemId = slotB.ItemId;
+            slotA.Amount = slotB.Amount;
+            slotB.ItemId = tempSlotAItemId;
+            slotB.Amount = tempSlotAItemAmount;
+        }
+
+        public void SetSize(Vector2Int newSize)
         {
             throw new NotImplementedException();
         }
@@ -256,7 +321,7 @@ namespace Inventory
 
         private int GetItemSlotCapacity(string itemId)
         {
-            return 100;
+            return 50;
         }
     }
 }
